@@ -1,36 +1,37 @@
 package main
 
 import (
-	"fmt"
-
-	"github.com/hemanth5603/RuleEngineBackend/models"
-	"github.com/hemanth5603/RuleEngineBackend/utils"
+	"github.com/gofiber/fiber/v2"
+	"github.com/hemanth5603/RuleEngineBackend/config"
+	"github.com/hemanth5603/RuleEngineBackend/handlers"
 )
 
 func main() {
-	// app := fiber.New()
+	app := fiber.New()
 
-	// app.Get("/", func(c *fiber.Ctx) error {
-	// 	return c.SendString("Hello, World!")
-	// })
-	// config.InitializePostgresSQL()
+	app.Get("/", func(c *fiber.Ctx) error {
+		return c.SendString("Hello, World!")
+	})
 
-	rule1, _ := utils.CreateRule("age > 30 AND department = 'Sales'")
+	handlers.AppRoutes(app)
+	config.InitializePostgresSQL()
 
-	rule2, _ := utils.CreateRule("experience > 5 OR salary > 50000")
+	// rule1, _ := utils.CreateRule("age > 30 AND department = 'Sales'")
 
-	combinedRule, _ := utils.CombineRules([]*models.Node{rule1, rule2}, "AND")
+	// rule2, _ := utils.CreateRule("experience > 5 OR salary > 50000")
 
-	user := models.UserModel{
-		Age:        52,
-		Department: "Sales",
-		Salary:     45000,
-		Experience: 4,
-	}
+	// combinedRule, _ := utils.CombineRules([]*models.Node{rule1, rule2}, "AND")
 
-	result := utils.EvaluateRule(combinedRule, user)
+	// user := models.UserModel{
+	// 	Age:        52,
+	// 	Department: "Sales",
+	// 	Salary:     45000,
+	// 	Experience: 4,
+	// }
 
-	fmt.Print(result)
+	// result := utils.EvaluateRule(combinedRule, user)
 
-	//app.Listen(":8081")
+	// fmt.Print(result)
+
+	app.Listen(":8081")
 }
