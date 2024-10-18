@@ -7,4 +7,5 @@ func AppRoutes(incommingRoutes *fiber.App) {
 	incommingRoutes.Get("/api/get-all-nodes", FetchRules)
 
 	incommingRoutes.Post("/api/combine-rules", CombineRuleAPI)
+	incommingRoutes.Post("/api/evaluate-rules", EvaluateRuleAPI)
 }

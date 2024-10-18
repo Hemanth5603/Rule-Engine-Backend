@@ -24,10 +24,13 @@ func EvaluateRule(node *models.Node, userData models.UserModel) bool {
 		fmt.Println("Evaluating OR")
 		return EvaluateRule(node.Left, userData) || EvaluateRule(node.Right, userData)
 	}
+	fmt.Println(node.NodeType)
 
 	// If it's an operand, evaluate the condition
 	if node.NodeType == "operand" {
+
 		condition := node.Value
+		fmt.Println(condition)
 		switch condition.Attribute {
 		case "age":
 			return evaluateCondition(condition, userData.Age)
@@ -44,8 +47,9 @@ func EvaluateRule(node *models.Node, userData models.UserModel) bool {
 
 // Helper function to evaluate a condition against a user attribute
 func evaluateCondition(condition *models.Condition, userValue interface{}) bool {
-	fmt.Printf("Evaluating Condition: Attribute=%s, Operator=%s, Value=%v, UserValue=%v\n", condition.Attribute, condition.Operator, condition.Value, userValue)
+	str := fmt.Sprintf("Evaluating Condition: Attribute=%s, Operator=%s, Value=%v, UserValue=%v\n", condition.Attribute, condition.Operator, condition.Value, userValue)
 
+	fmt.Println(str)
 	switch condition.Operator {
 	case ">":
 		// Ensure both values are integers for comparison
