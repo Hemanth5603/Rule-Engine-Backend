@@ -15,6 +15,11 @@ type RuleNode struct {
 	Value      string `db:"value"`
 }
 
+type RuleExpression struct {
+	ID         int    `json:"id"`
+	Expression string `json:"expression"`
+}
+
 func fetchAllNodes(db *sql.DB) ([]RuleNode, error) {
 	rows, err := db.Query(`
 		SELECT id, node_type, left_child, right_child, attribute, operator, value
@@ -64,7 +69,7 @@ func buildExpressionFromNode(node RuleNode, nodeMap map[int]RuleNode) string {
 	return fmt.Sprintf("(%s %s %s)", leftExpr, node.NodeType, rightExpr)
 }
 
-func BuildExpressionsForAllNodes(db *sql.DB) ([]string, error) {
+func BuildExpressionsForAllNodes(db *sql.DB) ([]RuleExpression, error) {
 	nodes, err := fetchAllNodes(db)
 	if err != nil {
 		return nil, err
@@ -73,13 +78,16 @@ func BuildExpressionsForAllNodes(db *sql.DB) ([]string, error) {
 	// Create a map for easy lookup of child nodes
 	nodeMap := createNodeMap(nodes)
 
-	// Store expressions for each root node (no parent)
-	var expressions []string
+	// Store expressions along with their corresponding IDs
+	var expressions []RuleExpression
 	for _, node := range nodes {
 		// Assuming root nodes are operators without parents
 		if node.NodeType == "AND" || node.NodeType == "OR" {
 			expression := buildExpressionFromNode(node, nodeMap)
-			expressions = append(expressions, expression)
+			expressions = append(expressions, RuleExpression{
+				ID:         node.ID,    // Include the node ID
+				Expression: expression, // Include the built expression
+			})
 		}
 	}
 	return expressions, nil
