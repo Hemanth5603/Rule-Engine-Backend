@@ -1,6 +1,7 @@
 package models
 
 type Node struct {
+	Id       int
 	NodeType string
 	Left     *Node
 	Right    *Node
