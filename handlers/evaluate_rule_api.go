@@ -264,8 +264,12 @@ func EvaluateRuleAPI(c *fiber.Ctx) error {
 
 	result := utils.EvaluateRule(rootNode, user)
 
+	if result {
+		return c.Status(fiber.StatusOK).
+			JSON(fiber.Map{"evaluation": result, "message": "User Valid"})
+	}
 	return c.Status(fiber.StatusOK).
-		JSON(fiber.Map{"status": "true", "result": result})
+		JSON(fiber.Map{"evaluation": result, "message": "User InValid"})
 
 }
 
