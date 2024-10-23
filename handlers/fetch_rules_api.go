@@ -14,7 +14,6 @@ func FetchRules(ctx *fiber.Ctx) error {
 		return ctx.Status(fiber.StatusInternalServerError).SendString("Error building expressions")
 	}
 
-	// Return the expressions as JSON
 	return ctx.JSON(fiber.Map{
 		"expressions": expressions,
 	})

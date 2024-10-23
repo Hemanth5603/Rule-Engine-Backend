@@ -6,7 +6,6 @@ import (
 	"github.com/hemanth5603/RuleEngineBackend/models"
 )
 
-// CombineRules combines multiple rule nodes into a single node using the specified operator (AND/OR).
 func CombineRules(rules []*models.Node, operator string) (*models.Node, error) {
 	if len(rules) == 0 {
 		return nil, errors.New("no rules provided to combine")
@@ -26,5 +25,5 @@ func CombineRules(rules []*models.Node, operator string) (*models.Node, error) {
 		}
 	}
 
-	return combined, nil // Return the combined node and nil for no error
+	return combined, nil
 }

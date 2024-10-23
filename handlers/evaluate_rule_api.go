@@ -10,18 +10,11 @@ import (
 	"github.com/hemanth5603/RuleEngineBackend/config"
 	"github.com/hemanth5603/RuleEngineBackend/models"
 	"github.com/hemanth5603/RuleEngineBackend/utils"
+	"github.com/hemanth5603/RuleEngineBackend/workers"
 )
 
-type EvaluateRulesRequest struct {
-	Salary     int    `json:"salary"`
-	Age        int    `json:"age"`
-	Experience int    `json:"experience"`
-	Department string `json:"department"`
-}
-
-// CreateNode creates a node from a condition string
 func CreateNode(condition string) *models.Node {
-	// Split the condition into parts (e.g., "age > 30")
+
 	parts := strings.Split(condition, " ")
 	if len(parts) == 3 {
 		return &models.Node{
@@ -29,14 +22,13 @@ func CreateNode(condition string) *models.Node {
 			Value: &models.Condition{
 				Attribute: parts[0],
 				Operator:  parts[1],
-				Value:     parseValue(parts[2]), // You may need to handle type conversion for values
+				Value:     parseValue(parts[2]),
 			},
 		}
 	}
 	return nil
 }
 
-// Utility to parse value (convert to int or string based on input)
 func parseValue(value string) interface{} {
 	if intVal, err := strconv.Atoi(value); err == nil {
 		return intVal
@@ -44,7 +36,6 @@ func parseValue(value string) interface{} {
 	return value
 }
 
-// CombineNodes combines two nodes with a logical operator (AND/OR)
 func CombineNodes(left *models.Node, right *models.Node, operator string) *models.Node {
 	return &models.Node{
 		NodeType: operator,
@@ -53,7 +44,6 @@ func CombineNodes(left *models.Node, right *models.Node, operator string) *model
 	}
 }
 
-// RebuildRuleTree builds the rule tree from a list of sub-rules and logical operators
 func RebuildRuleTree(rules []string, operators []string) *models.Node {
 	if len(rules) == 0 || len(operators) == 0 {
 		return nil
@@ -72,7 +62,6 @@ func RebuildRuleTree(rules []string, operators []string) *models.Node {
 	return root
 }
 
-// Recursive function to traverse the AST and store sub-expressions in an array
 func BuildExpressionWithSubRules(db *sql.DB, rootID int, subRules *[]string) (string, error) {
 	// Fetch the root node by its ID
 	rootNode, err := utils.DBfetchNodeByID(db, rootID)
@@ -80,15 +69,12 @@ func BuildExpressionWithSubRules(db *sql.DB, rootID int, subRules *[]string) (st
 		return "", err
 	}
 
-	// If it's a leaf node (operand), return the condition (no need to store it separately)
 	if rootNode.NodeType == "operand" {
 		return fmt.Sprintf("%s %s %s", rootNode.Attribute, rootNode.Operator, rootNode.Value), nil
 	}
 
-	// Recursively fetch and build the expressions for its children
 	var leftExpr, rightExpr string
 
-	// Fetch left child
 	if rootNode.LeftChild != nil {
 		leftExpr, err = BuildExpressionWithSubRules(db, *rootNode.LeftChild, subRules)
 		if err != nil {
@@ -96,7 +82,6 @@ func BuildExpressionWithSubRules(db *sql.DB, rootID int, subRules *[]string) (st
 		}
 	}
 
-	// Fetch right child
 	if rootNode.RightChild != nil {
 		rightExpr, err = BuildExpressionWithSubRules(db, *rootNode.RightChild, subRules)
 		if err != nil {
@@ -104,7 +89,6 @@ func BuildExpressionWithSubRules(db *sql.DB, rootID int, subRules *[]string) (st
 		}
 	}
 
-	// Combine the left and right expressions with the operator (AND/OR)
 	combinedExpr := fmt.Sprintf("(%s %s %s)", leftExpr, rootNode.NodeType, rightExpr)
 
 	// Add this combined expression as a "sub-rule" if it's a valid sub-expression (AND/OR node)
@@ -113,7 +97,6 @@ func BuildExpressionWithSubRules(db *sql.DB, rootID int, subRules *[]string) (st
 	return combinedExpr, nil
 }
 
-// Function to build the rule expression and store sub-expressions in an array
 func FetchAllSubRules(db *sql.DB, rootID int) ([]string, string, error) {
 	var subRules []string
 	combinedExpr, err := BuildExpressionWithSubRules(db, rootID, &subRules)
@@ -124,23 +107,19 @@ func FetchAllSubRules(db *sql.DB, rootID int) ([]string, string, error) {
 }
 
 func BuildExpressionWithRules(db *sql.DB, rootID int, rules *[]string) (string, error) {
-	// Fetch the root node by its ID
 	rootNode, err := utils.DBfetchNodeByID(db, rootID)
 	if err != nil {
 		return "", err
 	}
 
-	// If it's a leaf node (operand), store the rule and return the condition
 	if rootNode.NodeType == "operand" {
 		rule := fmt.Sprintf("%s %s %s", rootNode.Attribute, rootNode.Operator, rootNode.Value)
 		*rules = append(*rules, rule) // Add the rule to the array
 		return rule, nil
 	}
 
-	// Recursively fetch and build the expressions for its children
 	var leftExpr, rightExpr string
 
-	// Fetch left child
 	if rootNode.LeftChild != nil {
 		leftExpr, err = BuildExpressionWithRules(db, *rootNode.LeftChild, rules)
 		if err != nil {
@@ -148,7 +127,6 @@ func BuildExpressionWithRules(db *sql.DB, rootID int, rules *[]string) (string, 
 		}
 	}
 
-	// Fetch right child
 	if rootNode.RightChild != nil {
 		rightExpr, err = BuildExpressionWithRules(db, *rootNode.RightChild, rules)
 		if err != nil {
@@ -156,13 +134,11 @@ func BuildExpressionWithRules(db *sql.DB, rootID int, rules *[]string) (string, 
 		}
 	}
 
-	// Combine the left and right expressions with the operator (AND/OR)
 	combinedExpr := fmt.Sprintf("(%s %s %s)", leftExpr, rootNode.NodeType, rightExpr)
 
 	return combinedExpr, nil
 }
 
-// Function to build the rule expression and store each rule in an array
 func FetchAllRules(db *sql.DB, rootID int) ([]string, string, error) {
 	var rules []string
 	combinedExpr, err := BuildExpressionWithRules(db, rootID, &rules)
@@ -224,7 +200,7 @@ func EvaluateRuleAPI(c *fiber.Ctx) error {
 	combinedRule = strings.ReplaceAll(combinedRule, "(", "")
 	combinedRule = strings.ReplaceAll(combinedRule, ")", "")
 	fmt.Println(combinedRule)
-	operators := ExtractOperators(combinedRule)
+	operators := workers.CustomExtract(combinedRule)
 	// for i := 0; i < len(oper); i++ {
 	// 	if oper[i] == "AND" || oper[i] == "OR" {
 	// 		operators = append(operators, oper[i])
@@ -244,16 +220,9 @@ func EvaluateRuleAPI(c *fiber.Ctx) error {
 	// 	}
 	// }
 
-	operators = []string{
-		"AND",
-		"OR",
-		"AND",
-	}
 	fmt.Println(operators)
 
 	rootNode := RebuildRuleTree(rules, operators)
-
-	// //PrintRuleTree(rootNode)
 
 	user := models.UserModel{
 		Age:        payload.Age,
@@ -271,74 +240,4 @@ func EvaluateRuleAPI(c *fiber.Ctx) error {
 	return c.Status(fiber.StatusOK).
 		JSON(fiber.Map{"evaluation": result, "message": "User InValid"})
 
-}
-
-func ExtractOperatorsOutwardsInwards(rule string) []string {
-	var operators []string
-	openParentheses := 0
-
-	// Split the rule into tokens by spaces
-	tokens := strings.Fields(rule)
-
-	// Create two slices to store the operators: one for outermost and one for inner operators
-	var outerOperators, innerOperators []string
-
-	// Iterate through the tokens
-	for _, token := range tokens {
-		if token == "(" {
-			openParentheses++
-		} else if token == ")" {
-			openParentheses--
-		} else if token == "AND" || token == "OR" {
-			// If we are at the outermost level, store in outerOperators
-			if openParentheses == 1 {
-				outerOperators = append(outerOperators, token)
-			} else {
-				// Else, store in innerOperators (deeper levels)
-				innerOperators = append(innerOperators, token)
-			}
-		}
-	}
-
-	// Combine outer and inner operators to get the order: outermost first, innermost last
-	operators = append(outerOperators, innerOperators...)
-
-	return operators
-}
-
-func ExtractOperators(rule string) []string {
-	// Split the rule by spaces
-	tokens := strings.Fields(rule)
-
-	var operators []string
-	// Two-pointer approach: one pointer starts from the beginning, the other from the end
-	i, j := 0, len(tokens)-1
-
-	for i < j {
-		// Find the next operator from the left side
-		for i < len(tokens) && tokens[i] != "AND" && tokens[i] != "OR" {
-			i++
-		}
-
-		// Find the next operator from the right side
-		for j >= 0 && tokens[j] != "AND" && tokens[j] != "OR" {
-			j--
-		}
-
-		// Add the found operators to the array, i.e., the operator from the left and right sides
-		if i < j {
-			if tokens[i] == "AND" || tokens[i] == "OR" {
-				operators = append(operators, tokens[i])
-			}
-
-			if i != j && (tokens[j] == "AND" || tokens[j] == "OR") {
-				operators = append(operators, tokens[j])
-			}
-
-			i++
-			j--
-		}
-	}
-
-	return operators
 }

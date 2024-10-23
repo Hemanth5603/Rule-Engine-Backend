@@ -18,21 +18,22 @@ func DBSaveRule(db *sql.DB, node *models.Node) (int, error) {
 		node.NodeType,
 		func() *int {
 			if node.Left != nil {
-				id, _ := DBSaveRule(db, node.Left) // Recursively save left child
+				id, _ := DBSaveRule(db, node.Left) // Recursively saving left child
 				return &id
 			}
 			return nil
 		}(),
 		func() *int {
 			if node.Right != nil {
-				id, _ := DBSaveRule(db, node.Right) // Recursively save right child
+				id, _ := DBSaveRule(db, node.Right) // Recursively saving right child
 				return &id
 			}
 			return nil
 		}(),
+
 		func() string {
 			if node.NodeType == "operand" {
-				return node.Value.Attribute //node.Value.(*models.Condition).Attribute
+				return node.Value.Attribute
 			}
 			return ""
 		}(),
@@ -57,12 +58,11 @@ func DBSaveRule(db *sql.DB, node *models.Node) (int, error) {
 	return nodeID, nil
 }
 
-// Helper function to convert value to string for insertion
 func parseValueToString(value interface{}) string {
 	switch v := value.(type) {
 	case int:
 		return strconv.Itoa(v)
 	default:
-		return fmt.Sprintf("%v", v) // Handles strings and other types
+		return fmt.Sprintf("%v", v)
 	}
 }

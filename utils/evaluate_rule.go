@@ -6,27 +6,23 @@ import (
 	"github.com/hemanth5603/RuleEngineBackend/models"
 )
 
-// EvaluateRule traverses the AST and evaluates the rule against the provided user data
 func EvaluateRule(node *models.Node, userData models.UserModel) bool {
 
 	if node == nil {
 		return false
 	}
 
-	// If it's an AND operator, both sides must be true
 	if node.NodeType == "AND" {
 		fmt.Println("Evaluating AND")
 		return EvaluateRule(node.Left, userData) && EvaluateRule(node.Right, userData)
 	}
 
-	// If it's an OR operator, either side can be true
 	if node.NodeType == "OR" {
 		fmt.Println("Evaluating OR")
 		return EvaluateRule(node.Left, userData) || EvaluateRule(node.Right, userData)
 	}
 	fmt.Println(node.NodeType)
 
-	// If it's an operand, evaluate the condition
 	if node.NodeType == "operand" {
 
 		condition := node.Value
@@ -45,28 +41,24 @@ func EvaluateRule(node *models.Node, userData models.UserModel) bool {
 	return false
 }
 
-// Helper function to evaluate a condition against a user attribute
 func evaluateCondition(condition *models.Condition, userValue interface{}) bool {
 	str := fmt.Sprintf("Evaluating Condition: Attribute=%s, Operator=%s, Value=%v, UserValue=%v\n", condition.Attribute, condition.Operator, condition.Value, userValue)
 
 	fmt.Println(str)
 	switch condition.Operator {
 	case ">":
-		// Ensure both values are integers for comparison
 		if userInt, ok := userValue.(int); ok {
 			if conditionInt, ok := condition.Value.(int); ok {
 				return userInt > conditionInt
 			}
 		}
 	case "<":
-		// Ensure both values are integers for comparison
 		if userInt, ok := userValue.(int); ok {
 			if conditionInt, ok := condition.Value.(int); ok {
 				return userInt < conditionInt
 			}
 		}
 	case "=":
-		// Compare both strings or both integers
 		switch conditionValue := condition.Value.(type) {
 		case int:
 			if userInt, ok := userValue.(int); ok {

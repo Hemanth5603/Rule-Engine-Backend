@@ -8,11 +8,10 @@ import (
 	"github.com/hemanth5603/RuleEngineBackend/models"
 )
 
-// CreateRule parses the rule string and creates the AST.
 func CreateRule(ruleString string) (*models.Node, error) {
 	tokens := strings.Fields(ruleString)
 
-	if len(tokens) < 7 { // Minimum expected length for a valid rule
+	if len(tokens) < 7 {
 		return nil, errors.New("invalid rule format")
 	}
 
@@ -25,7 +24,7 @@ func CreateRule(ruleString string) (*models.Node, error) {
 		},
 	}
 
-	operator := tokens[3] // AND or OR
+	operator := tokens[3]
 
 	rightCondition := &models.Node{
 		NodeType: "operand",
@@ -36,7 +35,6 @@ func CreateRule(ruleString string) (*models.Node, error) {
 		},
 	}
 
-	// Create the root node with the operator
 	rootNode := &models.Node{
 		NodeType: operator,
 		Left:     leftCondition,
@@ -46,14 +44,13 @@ func CreateRule(ruleString string) (*models.Node, error) {
 	return rootNode, nil
 }
 
-// parseValue converts a string value into an appropriate type (int or string).
 func parseValue(value string) interface{} {
-	// Trim any surrounding quotes and whitespace
+
 	value = strings.TrimSpace(value)
 	value = strings.Trim(value, "'")
 
 	if intVal, err := strconv.Atoi(value); err == nil {
-		return intVal // Return as an integer
+		return intVal
 	}
-	return value // Return as a string
+	return value
 }

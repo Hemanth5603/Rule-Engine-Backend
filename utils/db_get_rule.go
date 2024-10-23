@@ -51,12 +51,11 @@ func createNodeMap(nodes []RuleNode) map[int]RuleNode {
 }
 
 func buildExpressionFromNode(node RuleNode, nodeMap map[int]RuleNode) string {
-	// If it's an operand (leaf node), return the condition
+
 	if node.NodeType == "operand" {
 		return fmt.Sprintf("%s %s %s", node.Attribute, node.Operator, node.Value)
 	}
 
-	// Recursively build the left and right expressions
 	var leftExpr, rightExpr string
 	if node.LeftChild != nil {
 		leftExpr = buildExpressionFromNode(nodeMap[*node.LeftChild], nodeMap)
@@ -65,7 +64,6 @@ func buildExpressionFromNode(node RuleNode, nodeMap map[int]RuleNode) string {
 		rightExpr = buildExpressionFromNode(nodeMap[*node.RightChild], nodeMap)
 	}
 
-	// Combine left and right expressions with the operator (AND/OR)
 	return fmt.Sprintf("(%s %s %s)", leftExpr, node.NodeType, rightExpr)
 }
 
@@ -85,8 +83,8 @@ func BuildExpressionsForAllNodes(db *sql.DB) ([]RuleExpression, error) {
 		if node.NodeType == "AND" || node.NodeType == "OR" {
 			expression := buildExpressionFromNode(node, nodeMap)
 			expressions = append(expressions, RuleExpression{
-				ID:         node.ID,    // Include the node ID
-				Expression: expression, // Include the built expression
+				ID:         node.ID,
+				Expression: expression,
 			})
 		}
 	}

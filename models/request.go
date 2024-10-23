@@ -10,3 +10,8 @@ type EvaluateRuleRequest struct {
 	Experience int    `json:"experience"`
 	Department string `json:"department"`
 }
+
+type CombineRulesRequest struct {
+	RootNodeIds []int  `json:"rootNodeIds"`
+	Operator    string `json:"operator"`
+}
